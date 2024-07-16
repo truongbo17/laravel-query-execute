@@ -2,7 +2,7 @@
 
 namespace Bo\LangFileManager\App\Services;
 
-class LangFiles
+class QueryService
 {
     private $lang;
 

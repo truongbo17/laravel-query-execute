@@ -5,7 +5,7 @@ namespace Bo\LangFileManager\App\Models;
 use Bo\Base\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
 
-class Language extends Model
+class Query extends Model
 {
     use CrudTrait;
 
