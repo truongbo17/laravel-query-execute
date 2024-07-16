@@ -1,0 +1,48 @@
+{
+    "name": "bo/laravel-query-execute",
+    "description": "Run queries and rollback version base on laravel",
+    "type": "package",
+    "keywords": [
+        "laravel",
+        "laravel-query",
+        "laravel-query-execute"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/truongbo17/laravel-query-execute",
+    "authors": [
+        {
+            "name": "Nguyen Quang Truong",
+            "email": "truongnq017@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Bo\\LaravelQueryExecute\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "classmap": [
+            "database"
+        ],
+        "psr-4": {
+            "Bo\\LaravelQueryExecute\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "ext-pdo": "*"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Bo\\LaravelQueryExecute\\LaravelQueryExecuteServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
