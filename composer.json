@@ -1,5 +1,5 @@
 {
-    "name": "bo/laravel-query-execute",
+    "name": "truongbo/laravel-query-execute",
     "description": "Run queries and rollback version base on laravel",
     "type": "package",
     "keywords": [
