@@ -19,6 +19,14 @@
             width: 100%;
             overflow-x: auto;
         }
+         .editable:hover {
+             cursor: text;
+         }
+        .hidden-input {
+            display: none;
+        }
+    </style>
+
     </style>
 @endpush
 
@@ -51,10 +59,11 @@
         </div>
         <div class="col-9 border-left">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <div class="mb-2">
-                    <h3 class="mb-0">New Query</h3>
-                    <span>No description</span>
+                <div class="mb-2 editable" style="width: 50%">
+                    <h3 class="mb-0 editable-text" data-type="name">New Query</h3>
+                    <span class="editable-text" data-type="description">No description</span>
                 </div>
+
                 <div class="action">
                     <button id="format" class="btn btn-primary"><i class="fa fa-flask" aria-hidden="true"></i> Format
                         SQL
@@ -94,6 +103,37 @@ FROM config_templates JOIN users ON config_templates.id = users.id WHERE config_
     <script src="{{ asset('laravel-query-execute/js/datatable.min.js') }}"></script>
     <script>
         $(document).ready(function () {
+            function createInputElement(value) {
+                return `<input type="text" class="form-control editable-input" value="${value}" />`;
+            }
+
+            // Click handler to replace text with input
+            $('.editable-text').click(function() {
+                const $this = $(this);
+                if ($this.find('input').length === 0) {
+                    const value = $this.text().trim();
+                    const inputElement = createInputElement(value);
+                    $this.html(inputElement);
+                    $this.find('input').focus();
+                }
+            });
+
+            // Blur handler to replace input with text and trigger submit
+            $(document).on('blur', '.editable-input', function() {
+                const $input = $(this);
+                const newValue = $input.val().trim();
+                const $parent = $input.parent();
+                const dataType = $parent.data('type');
+                $parent.text(newValue);
+                submitValue(dataType, newValue);
+            });
+
+            // Function to handle the submit action
+            function submitValue(type, value) {
+                // Example of submit action
+                console.log(`Submitting ${type}: ${value}`);
+            }
+
             const editor = CodeMirror.fromTextArea(document.getElementById("highlight"), {
                 lineNumbers: true,
                 mode: "text/x-mysql",

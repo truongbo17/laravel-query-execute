@@ -3,6 +3,7 @@
 namespace Bo\LaravelQueryExecute\Http\Controllers;
 
 use Bo\Base\Http\Controllers\CrudController;
+use Bo\LaravelQueryExecute\Models\Query;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -197,5 +198,29 @@ class QueryExecuteController extends CrudController
         $pattern = '/\bFROM\b\s+(\w+)/i';
         preg_match($pattern, $sqlCommand, $matches);
         return $matches[1] ?? 'result';
+    }
+
+    public function saveQuery(Request $request): array
+    {
+        try {
+            Query::query()->updateOrCreate([
+                'id' => $request->input('id'),
+            ], [
+                'name' => $request->input('name'),
+                'description' => $request->input('description'),
+                'query' => $request->input('query'),
+            ]);
+
+            return [
+                'success' => true,
+                'data' => [],
+            ];
+        } catch (\Throwable $exception) {
+            return [
+                'success' => false,
+                'data' => [],
+                'message' => $exception->getMessage(),
+            ];
+        }
     }
 }

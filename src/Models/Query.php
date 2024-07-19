@@ -1,38 +1,19 @@
 <?php
 
-namespace Bo\LangFileManager\App\Models;
+namespace Bo\LaravelQueryExecute\Models;
 
-use Bo\Base\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Query extends Model
 {
-    use CrudTrait;
+    use SoftDeletes;
 
-    protected $table = 'languages';
+    protected $table = 'queries';
 
-    protected $fillable = ['name', 'flag', 'abbr', 'native', 'active', 'default'];
-
-    public $timestamps = false;
-
-    public static function getActiveLanguagesArray()
-    {
-        $active_languages = self::where('active', 1)->get()->toArray();
-        $localizable_languages_array = [];
-
-        if (count($active_languages)) {
-            foreach ($active_languages as $key => $lang) {
-                $localizable_languages_array[$lang['abbr']] = $lang;
-            }
-
-            return $localizable_languages_array;
-        }
-
-        return config('laravellocalization.supportedLocales');
-    }
-
-    public static function findByAbbr($abbr = false)
-    {
-        return self::where('abbr', $abbr)->first();
-    }
+    protected $fillable = [
+        'name',
+        'description',
+        'query'
+    ];
 }
