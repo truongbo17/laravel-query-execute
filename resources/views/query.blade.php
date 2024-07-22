@@ -25,6 +25,9 @@
         .hidden-input {
             display: none;
         }
+        .editable-input {
+            width: 100%;
+        }
     </style>
 
     </style>
@@ -60,8 +63,8 @@
         <div class="col-9 border-left">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div class="mb-2 editable" style="width: 50%">
-                    <h3 class="mb-0 editable-text" data-type="name">New Query</h3>
-                    <span class="editable-text" data-type="description">No description</span>
+                    <h3 class="mb-0 editable-text" data-type="name">{{ $query->name ?? 'New Query' }}</h3>
+                    <span class="editable-text" data-type="description">{{ $query->description ?? 'No description' }}</span>
                 </div>
 
                 <div class="action">
@@ -76,11 +79,7 @@
                 </div>
             </div>
             <div>
-                <textarea id="highlight" name="highlight">
-                                        SELECT *
-FROM config_templates JOIN users ON config_templates.id = users.id WHERE config_templates.id > 0
-                select * from users
-                </textarea>
+                <textarea id="highlight" name="highlight">{!! $query->query ?? '' !!}</textarea>
             </div>
             <div id="message" class="mt-3 alert alert-danger alert-dismissible fade show" role="alert">
                 <strong>Error!</strong> <span id="alert"></span>
@@ -103,36 +102,53 @@ FROM config_templates JOIN users ON config_templates.id = users.id WHERE config_
     <script src="{{ asset('laravel-query-execute/js/datatable.min.js') }}"></script>
     <script>
         $(document).ready(function () {
+            let allTablesData = {};
+
             function createInputElement(value) {
                 return `<input type="text" class="form-control editable-input" value="${value}" />`;
             }
 
-            // Click handler to replace text with input
-            $('.editable-text').click(function() {
+            $(document).on('click', '.editable-text', function () {
                 const $this = $(this);
-                if ($this.find('input').length === 0) {
-                    const value = $this.text().trim();
-                    const inputElement = createInputElement(value);
-                    $this.html(inputElement);
-                    $this.find('input').focus();
+                const currentText = $this.text().trim();
+                const inputType = $this.data('type');
+                const placeholder = $this.data('placeholder');
+                const input = $('<input>', {
+                    type: 'text',
+                    class: 'editable-input',
+                    value: currentText,
+                    'data-type': inputType,
+                    placeholder: placeholder
+                });
+
+                $this.replaceWith(input);
+                input.focus();
+            });
+
+            $(document).on('blur', '.editable-input', function () {
+                const $this = $(this);
+                const newValue = $this.val().trim();
+                const inputType = $this.data('type');
+                let newElement;
+
+                if (inputType === 'name') {
+                    newElement = $('<h3>', {
+                        class: 'mb-0 editable-text',
+                        'data-type': inputType,
+                        'data-placeholder': $this.attr('placeholder'),
+                        text: newValue
+                    });
+                } else if (inputType === 'description') {
+                    newElement = $('<span>', {
+                        class: 'editable-text',
+                        'data-type': inputType,
+                        'data-placeholder': $this.attr('placeholder'),
+                        text: newValue
+                    });
                 }
-            });
 
-            // Blur handler to replace input with text and trigger submit
-            $(document).on('blur', '.editable-input', function() {
-                const $input = $(this);
-                const newValue = $input.val().trim();
-                const $parent = $input.parent();
-                const dataType = $parent.data('type');
-                $parent.text(newValue);
-                submitValue(dataType, newValue);
+                $this.replaceWith(newElement);
             });
-
-            // Function to handle the submit action
-            function submitValue(type, value) {
-                // Example of submit action
-                console.log(`Submitting ${type}: ${value}`);
-            }
 
             const editor = CodeMirror.fromTextArea(document.getElementById("highlight"), {
                 lineNumbers: true,
@@ -180,37 +196,56 @@ FROM config_templates JOIN users ON config_templates.id = users.id WHERE config_
                     return response.json()
                 }).then(function (data) {
                     if (data.success) {
-                        let tableHtml = '';
-                        for (const table in data.data) {
-                            let columnHtml = '';
-                            for (const column in data.data[table]) {
-                                columnHtml +=
-                                    `<p class="d-flex align-items-center mb-1">
-                <i class="fa fa-circle ml-2" aria-hidden="true"></i>
-                <span class="ml-2 column-content">${data.data[table][column]}</span>
-                <i class="fa fa-angle-double-right ml-auto mr-2 column-arrow" style="cursor: pointer" role="button" aria-hidden="true"></i>
-            </p>`;
-                            }
-                            tableHtml +=
-                                `<div class="mb-2">
-            <div class="list-group-item d-flex align-items-center p-1">
-                <i class="fa fa-table ml-2" aria-hidden="true"></i>
-                <span class="ml-2 table-content" type="button" data-toggle="collapse" data-target="#collapse-${table}" aria-expanded="false" aria-controls="collapse-${table}">${table}</span>
-                <i class="fa fa-angle-double-right ml-auto mr-2 table-arrow" style="cursor: pointer" aria-hidden="true"></i>
-            </div>
-            <div class="collapse" id="collapse-${table}">
-                <div class="border pt-1 pb-1 pl-2 ml-3 mt-1">${columnHtml}</div>
-            </div>
-        </div>`;
-                        }
+                        allTablesData = data.data;
+                        renderTableList(data.data)
                         $('#message').hide()
-                        $('#list-table').html(tableHtml)
                     } else {
                         $('#message').show()
                         $('#message #alert').text(data.message)
                     }
                 })
             }
+
+            const renderTableList = (tables) => {
+                let tableHtml = '';
+                for (const table in tables) {
+                    let columnHtml = '';
+                    for (const column in tables[table]) {
+                        columnHtml +=
+                            `<p class="d-flex align-items-center mb-1">
+                        <i class="fa fa-circle ml-2" aria-hidden="true"></i>
+                        <span class="ml-2 column-content">${tables[table][column]}</span>
+                        <i class="fa fa-angle-double-right ml-auto mr-2 column-arrow" style="cursor: pointer" role="button" aria-hidden="true"></i>
+                    </p>`;
+                    }
+                    tableHtml +=
+                        `<div class="mb-2">
+                    <div class="list-group-item d-flex align-items-center p-1">
+                        <i class="fa fa-table ml-2" aria-hidden="true"></i>
+                        <span class="ml-2 table-content" type="button" data-toggle="collapse" data-target="#collapse-${table}" aria-expanded="false" aria-controls="collapse-${table}">${table}</span>
+                        <i class="fa fa-angle-double-right ml-auto mr-2 table-arrow" style="cursor: pointer" aria-hidden="true"></i>
+                    </div>
+                    <div class="collapse" id="collapse-${table}">
+                        <div class="border pt-1 pb-1 pl-2 ml-3 mt-1">${columnHtml}</div>
+                    </div>
+                </div>`;
+                }
+                $('#list-table').html(tableHtml);
+            };
+
+
+            $('#table-name').on('keyup', function () {
+                const searchTerm = $(this).val().trim().toLowerCase();
+                const filteredTables = {};
+
+                for (const table in allTablesData) {
+                    if (table.toLowerCase().includes(searchTerm)) {
+                        filteredTables[table] = allTablesData[table];
+                    }
+                }
+
+                renderTableList(filteredTables);
+            });
 
             $(document).on('click', '.table-arrow', function() {
                 let tableContent = $(this).siblings('.table-content').text();
@@ -316,8 +351,49 @@ FROM config_templates JOIN users ON config_templates.id = users.id WHERE config_
                         $('#message').show()
                         $('#message #alert').text(data.message)
                     }
+                }).catch(function () {
+                    $('#message').show()
+                    $('#message #alert').text('Error execute query.')
                 })
             }
+
+            $('#save').click(() => {
+                const name = $('h3[data-type="name"]').text().trim();
+                const description = $('span[data-type="description"]').text().trim();
+                const query = editor.getValue();
+                let data = {
+                    name: name,
+                    description: description,
+                    query: query,
+                    @if($query?->id) id: {{ $query->id }} @endif
+                }
+
+                fetch('{{route('query-execute.save')}}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        "X-CSRF-Token": "{{csrf_token()}}",
+                    },
+                    credentials: "same-origin",
+                    body: JSON.stringify(data)
+                }).then(function (response) {
+                    return response.json()
+                }).then(function (data) {
+                    if (data.success) {
+                        $('#message').hide()
+                        @if(empty($query))
+                            window.location = "{{route('query-execute.query')}}/" + data.data.id
+                        @endif
+                    } else {
+                        $('#message').show()
+                        $('#message #alert').text(data.message)
+                    }
+                }).catch(function () {
+                    $('#message').show()
+                    $('#message #alert').text('Error save query.')
+                })
+            })
         });
     </script>
 @endpush

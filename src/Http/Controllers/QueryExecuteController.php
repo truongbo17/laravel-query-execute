@@ -19,11 +19,17 @@ class QueryExecuteController extends CrudController
         return view('laravel-query-execute::home');
     }
 
-    public function query(Request $request): View
+    public function query(Request $request, $id = null): View
     {
+        $query = null;
+        if (!empty($id)) {
+            $query = Query::query()->findOrFail($id);
+        }
+
         $connections = config('laravel-query-execute.query-execute.connections');
         return view('laravel-query-execute::query', [
             'connections' => $connections,
+            'query' => $query,
         ]);
     }
 
@@ -203,7 +209,7 @@ class QueryExecuteController extends CrudController
     public function saveQuery(Request $request): array
     {
         try {
-            Query::query()->updateOrCreate([
+            $query = Query::query()->updateOrCreate([
                 'id' => $request->input('id'),
             ], [
                 'name' => $request->input('name'),
@@ -213,7 +219,7 @@ class QueryExecuteController extends CrudController
 
             return [
                 'success' => true,
-                'data' => [],
+                'data' => $query->toArray(),
             ];
         } catch (\Throwable $exception) {
             return [
